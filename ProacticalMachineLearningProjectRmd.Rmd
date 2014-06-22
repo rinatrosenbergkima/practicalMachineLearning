@@ -1,0 +1,39 @@
+Practical Machine Learning Project By RRK
+========================================================
+
+Read the data files into pmlTraining and pmlTesting:
+```{r}
+setwd("~/Box Sync/Coursera/PracticalMachineLearning/project")
+pmlTraining<-read.csv("pml-training.csv") 
+pmlTesting<-read.csv("pml-testing.csv") 
+```
+
+Clean the data from columns that have more than 19,000 NA
+```{r}
+#training
+pmlIsNATraining<-is.na(pmlTraining)
+arrSumNATraining<-apply(pmlIsNATraining,2,sum) #for each column, how many are NA
+bIsNAColumnTraining<-(arrSumNATraining>19000)
+pmlTrainingClean<-pmlTraining[,!bIsNAColumnTraining]
+#testing
+pmlTestingClean<-pmlTesting[,!bIsNAColumnTraining]
+```
+
+Clean the data from columns that have more than 19,000 ""
+```{r}
+#training
+pmlEmptyTraining<-pmlTrainingClean==""
+arrSumEmptyTraining<-apply(pmlEmptyTraining,2,sum)
+bIsEmptyColumnTraining<-(arrSumEmptyTraining>19000)
+pmlTrainingClean<-pmlTrainingClean[,!bIsEmptyColumnTraining]
+#testing
+pmlTestingClean<-pmlTestingClean[,!bIsEmptyColumnTraining]
+```
+After clearning the data, 60 variables remained:
+```{r}
+names(pmlTrainingClean)
+names(pmlTestingClean)
+```
+
+
+
