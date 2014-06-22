@@ -6,6 +6,7 @@ Read the data files into pmlTraining and pmlTesting:
 setwd("~/Box Sync/Coursera/PracticalMachineLearning/project")
 pmlTraining<-read.csv("pml-training.csv") 
 pmlTesting<-read.csv("pml-testing.csv") 
+
 ```
 
 Clean the data from columns that have more than 19,000 NA
@@ -35,5 +36,30 @@ names(pmlTrainingClean)
 names(pmlTestingClean)
 ```
 
+Split the training data to training and testingCV (testing cross validation)
+```{r}
+library(caret)
+library(AppliedPredictiveModeling)
+library(ggplot2)
+inTrain = createDataPartition(pmlTrainingClean$classe, p = 3/4,list=FALSE)
+training = pmlTrainingClean[ inTrain,]
+testingCV = pmlTrainingClean[-inTrain,]
+```
+
+Train the training data with glm
+```{r}
+modelFit<-train(classe ~., data=training, method="rpart")
+library(rattle)
+fancyRpartPlot(modelFit$finalModel)
+```
+
+Make a prediction for the testingCV dataset
+```{r}
+confusionMatrix(testingCV[,60],predict(modelFit, newdata=testingCV))
+```
 
 
+
+```{r}
+
+```
