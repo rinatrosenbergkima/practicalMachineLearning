@@ -88,6 +88,14 @@ names(pmlTestingClean)
 ## [58] "magnet_forearm_y"     "magnet_forearm_z"     "problem_id"
 ```
 
+Remove the var X as it perfectly correlate to the outcome
+
+```r
+pmlTrainingClean<-pmlTrainingClean[,-1]
+pmlTestingClean<-pmlTestingClean[,-1]
+```
+
+
 Split the training data to training and testingCV (testing cross validation)
 
 ```r
@@ -107,7 +115,7 @@ training = pmlTrainingClean[ inTrain,]
 testingCV = pmlTrainingClean[-inTrain,]
 ```
 
-Train the training data with glm
+Train the training data with rpart
 
 ```r
 modelFit<-train(classe ~., data=training, method="rpart")
@@ -136,12 +144,12 @@ fancyRpartPlot(modelFit$finalModel)
 ## Loading required package: RColorBrewer
 ```
 
-![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6.png) 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7.png) 
 
-Make a prediction for the testingCV dataset
+Make a prediction for the testingCV dataset with rpart
 
 ```r
-confusionMatrix(testingCV[,60],predict(modelFit, newdata=testingCV))
+confusionMatrix(testingCV[,59],predict(modelFit, newdata=testingCV))
 ```
 
 ```
@@ -149,35 +157,101 @@ confusionMatrix(testingCV[,60],predict(modelFit, newdata=testingCV))
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1394    1    0    0    0
-##          B    0  949    0    0    0
-##          C    0    0    0    0  855
-##          D    0    0    0    0  804
-##          E    0    0    0    0  901
+##          A 1072  114  134   74    1
+##          B  222  428  159  140    0
+##          C   28   87  726   14    0
+##          D   47  131  261  365    0
+##          E   13  245  183   51  409
 ## 
 ## Overall Statistics
 ##                                         
-##                Accuracy : 0.662         
-##                  95% CI : (0.648, 0.675)
-##     No Information Rate : 0.522         
+##                Accuracy : 0.612         
+##                  95% CI : (0.598, 0.625)
+##     No Information Rate : 0.298         
 ##     P-Value [Acc > NIR] : <2e-16        
 ##                                         
-##                   Kappa : 0.569         
-##  Mcnemar's Test P-Value : NA            
+##                   Kappa : 0.509         
+##  Mcnemar's Test P-Value : <2e-16        
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity             1.000    0.999       NA       NA    0.352
-## Specificity             1.000    1.000    0.826    0.836    1.000
-## Pos Pred Value          0.999    1.000       NA       NA    1.000
-## Neg Pred Value          1.000    1.000       NA       NA    0.586
-## Prevalence              0.284    0.194    0.000    0.000    0.522
-## Detection Rate          0.284    0.194    0.000    0.000    0.184
-## Detection Prevalence    0.284    0.194    0.174    0.164    0.184
-## Balanced Accuracy       1.000    0.999       NA       NA    0.676
+## Sensitivity             0.776   0.4259    0.496   0.5668   0.9976
+## Specificity             0.908   0.8664    0.963   0.8969   0.8905
+## Pos Pred Value          0.768   0.4510    0.849   0.4540   0.4539
+## Neg Pred Value          0.912   0.8541    0.818   0.9320   0.9998
+## Prevalence              0.282   0.2049    0.298   0.1313   0.0836
+## Detection Rate          0.219   0.0873    0.148   0.0744   0.0834
+## Detection Prevalence    0.284   0.1935    0.174   0.1639   0.1837
+## Balanced Accuracy       0.842   0.6461    0.729   0.7319   0.9440
 ```
 
 
+Train the training data with rf and make a prediction for testingCV dataset
 
+```r
+modelFit<-train(classe ~., data=training, method="rf")
+```
 
+```
+## Loading required package: randomForest
+## randomForest 4.6-7
+## Type rfNews() to see new features/changes/bug fixes.
+```
+
+```r
+confusionMatrix(testingCV[,59],predict(modelFit, newdata=testingCV))
+```
+
+```
+## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1395    0    0    0    0
+##          B    0  949    0    0    0
+##          C    0    0  855    0    0
+##          D    0    0    2  802    0
+##          E    0    0    0    0  901
+## 
+## Overall Statistics
+##                                     
+##                Accuracy : 1         
+##                  95% CI : (0.999, 1)
+##     No Information Rate : 0.284     
+##     P-Value [Acc > NIR] : <2e-16    
+##                                     
+##                   Kappa : 0.999     
+##  Mcnemar's Test P-Value : NA        
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity             1.000    1.000    0.998    1.000    1.000
+## Specificity             1.000    1.000    1.000    1.000    1.000
+## Pos Pred Value          1.000    1.000    1.000    0.998    1.000
+## Neg Pred Value          1.000    1.000    1.000    1.000    1.000
+## Prevalence              0.284    0.194    0.175    0.164    0.184
+## Detection Rate          0.284    0.194    0.174    0.164    0.184
+## Detection Prevalence    0.284    0.194    0.174    0.164    0.184
+## Balanced Accuracy       1.000    1.000    0.999    1.000    1.000
+```
+
+Make prediction for the 20 items test set. 
+
+```r
+answers=predict(modelFit,newdata=pmlTestingClean)
+```
+Write files for submission
+
+```r
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
+pml_write_files(answers)
+```

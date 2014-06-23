@@ -36,6 +36,13 @@ names(pmlTrainingClean)
 names(pmlTestingClean)
 ```
 
+Remove the var X as it perfectly correlate to the outcome
+```{r}
+pmlTrainingClean<-pmlTrainingClean[,-1]
+pmlTestingClean<-pmlTestingClean[,-1]
+```
+
+
 Split the training data to training and testingCV (testing cross validation)
 ```{r}
 library(caret)
@@ -46,20 +53,43 @@ training = pmlTrainingClean[ inTrain,]
 testingCV = pmlTrainingClean[-inTrain,]
 ```
 
-Train the training data with glm
+Train the training data with rpart
 ```{r}
 modelFit<-train(classe ~., data=training, method="rpart")
 library(rattle)
 fancyRpartPlot(modelFit$finalModel)
 ```
 
-Make a prediction for the testingCV dataset
+Make a prediction for the testingCV dataset with rpart
 ```{r}
-confusionMatrix(testingCV[,60],predict(modelFit, newdata=testingCV))
+confusionMatrix(testingCV[,59],predict(modelFit, newdata=testingCV))
 ```
 
 
-
+Train the training data with random forest and make a prediction for testingCV dataset
 ```{r}
+modelFit<-train(classe ~., data=training, method="rf")
+summary(modelFit)
+varImp(modFit)
+confusionMatrix(testingCV[,59],predict(modelFit, newdata=testingCV))
+```
+Plot important variables:
+```{r}
+qplot(testingCV[,1],testingCV$classe,colour=data=testingCV)
+```
+Make prediction for the 20 items test set. Since the method "rf" resulted in much higher accuracy, I will use it to make the predictions for the test set
+```{r}
+answers<-predict(modelFit,newdata=pmlTestingClean)
+```
+Write files for submission
+```{r}
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
 
+pml_write_files(answers)
 ```
